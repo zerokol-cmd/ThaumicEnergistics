@@ -215,7 +215,7 @@ public abstract class ContainerEssentiaCellTerminalBase extends ContainerWithPla
      *
      * @param stackToMerge
      * @return True if the slot is empty, or if can be merged by increasing the slots stacksize by the specified stacks
-     *         stacksize.
+     * stacksize.
      */
     private boolean canMergeWithOutputSlot(final ItemStack stackToMerge) {
         // Ensure the stack is not null.
@@ -298,7 +298,7 @@ public abstract class ContainerEssentiaCellTerminalBase extends ContainerWithPla
      */
     @Nullable
     private ImmutablePair<Integer, ItemStack> drainContainer(final ItemStack container,
-            final BaseActionSource actionSource, final Actionable mode) {
+                                                             final BaseActionSource actionSource, final Actionable mode) {
         // Ensure there is a container
         if (container == null) {
             return null;
@@ -352,7 +352,7 @@ public abstract class ContainerEssentiaCellTerminalBase extends ContainerWithPla
      */
     @Nullable
     private ImmutablePair<Integer, ItemStack> fillContainer(final Aspect withAspect, final ItemStack container,
-            final BaseActionSource actionSource, final Actionable mode) {
+                                                            final BaseActionSource actionSource, final Actionable mode) {
         // Ensure there is an aspect
         if (withAspect == null) {
             return null;
@@ -534,7 +534,7 @@ public abstract class ContainerEssentiaCellTerminalBase extends ContainerWithPla
      * @return The new stack if changes made, the original stack otherwise.
      */
     protected ItemStack transferEssentia(final ItemStack stack, final Aspect aspect,
-            final BaseActionSource actionSource, final Actionable mode) {
+                                         final BaseActionSource actionSource, final Actionable mode) {
         // Ensure the stack & monitor are not null
         if ((stack == null) || (this.essentiaMonitor == null)) {
             return stack;
@@ -865,7 +865,44 @@ public abstract class ContainerEssentiaCellTerminalBase extends ContainerWithPla
     }
 
     /**
-     * Called when the the selected aspect has changed.
+     * Called by the gui via "Dump All" button
+     *
+     * @param player
+     */
+    public void onDumpAll(@Nonnull final EntityPlayer player) {
+        for (int i = 0; i < player.inventory.mainInventory.length; i++) {
+            ItemStack sourceStack = player.inventory.mainInventory[i];
+            if (sourceStack == null) continue;
+
+            final ItemStack takeFrom = sourceStack.copy();
+
+            // Get the action source
+            final BaseActionSource actionSource = this.getActionSource();
+
+            // Simulate the transfer
+            ItemStack resultStack = this.transferEssentia(takeFrom, null, actionSource, Actionable.SIMULATE);
+
+            // Was any work performed?
+            if ((resultStack == null) || (resultStack == takeFrom)) {
+                // Nothing to do. Looking for next item.
+                continue;
+            }
+
+            // Perform the work
+            this.transferEssentia(takeFrom, null, actionSource, Actionable.MODULATE);
+
+            // Remove the filled jar from player inventory
+            player.inventory.mainInventory[i] = null;
+
+
+            // Give resulting jar instead
+            player.inventory.addItemStackToInventory(resultStack);
+        }
+        this.detectAndSendChanges();
+    }
+
+    /**
+     * Called when the selected aspect has changed.
      *
      * @param selectedAspect
      */
@@ -986,21 +1023,21 @@ public abstract class ContainerEssentiaCellTerminalBase extends ContainerWithPla
             // Was the slot clicked in the player or hotbar inventory?
             else if (this.slotClickedWasInPlayerInventory(slotNumber)
                     || this.slotClickedWasInHotbarInventory(slotNumber)) {
-                        // Is the item valid for the input slot?
-                        if (this.inputSlot.isItemValid(slotStack)) {
-                            // Attempt to merge with the input slot
-                            didMerge = this.mergeItemStack(
-                                    slotStack,
-                                    this.inputSlot.slotNumber,
-                                    this.inputSlot.slotNumber + 1,
-                                    false);
-                        }
+                // Is the item valid for the input slot?
+                if (this.inputSlot.isItemValid(slotStack)) {
+                    // Attempt to merge with the input slot
+                    didMerge = this.mergeItemStack(
+                            slotStack,
+                            this.inputSlot.slotNumber,
+                            this.inputSlot.slotNumber + 1,
+                            false);
+                }
 
-                        // Did we merge?
-                        if (!didMerge) {
-                            didMerge = this.swapSlotInventoryHotbar(slotNumber, slotStack);
-                        }
-                    }
+                // Did we merge?
+                if (!didMerge) {
+                    didMerge = this.swapSlotInventoryHotbar(slotNumber, slotStack);
+                }
+            }
 
             if (didMerge) {
                 // Did the merger drain the stack?

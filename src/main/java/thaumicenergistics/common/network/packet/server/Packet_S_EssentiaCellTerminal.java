@@ -23,7 +23,7 @@ public class Packet_S_EssentiaCellTerminal extends ThEServerPacket {
      * Packet modes
      */
     private static final byte MODE_SELECTED_ASPECT = 0, MODE_FULL_UPDATE = 1, MODE_SORT_CHANGE = 2, MODE_AUTO_CRAFT = 3,
-            MODE_VIEW_CHANGE = 4, MODE_HELD_ITEM = 5, MODE_REQUEST_CRAFTING_STATUS = 6;
+            MODE_VIEW_CHANGE = 4, MODE_HELD_ITEM = 5, MODE_REQUEST_CRAFTING_STATUS = 6, MODE_DUMP_ALL_REQUEST = 7;
 
     /**
      * The aspect.
@@ -155,6 +155,12 @@ public class Packet_S_EssentiaCellTerminal extends ThEServerPacket {
         // Send it
         NetworkHandler.sendPacketToServer(packet);
     }
+    public static void sendDumpAllRequest(final EntityPlayer player) {
+        Packet_S_EssentiaCellTerminal packet = newPacket(player, MODE_DUMP_ALL_REQUEST);
+
+        // Send it
+        NetworkHandler.sendPacketToServer(packet);
+    }
 
     @Override
     public void execute() {
@@ -196,6 +202,10 @@ public class Packet_S_EssentiaCellTerminal extends ThEServerPacket {
             case MODE_REQUEST_CRAFTING_STATUS:
                 ((ContainerEssentiaCellTerminalBase) this.player.openContainer)
                         .onClientRequestCraftingStatus(this.player);
+                break;
+            case MODE_DUMP_ALL_REQUEST:
+                ((ContainerEssentiaCellTerminalBase) this.player.openContainer)
+                        .onDumpAll(this.player);
                 break;
         }
     }
